@@ -5,14 +5,32 @@ Created on Thu Mar 23 21:24:17 2023
 @author: Jenyi
 """
 import numpy as np
-from sklearn.neighbors import KDTree as ktree
 import matplotlib.pyplot as plt
+import heapq as hp
 
+def get_KNN(arr, k):
+	
+	neighbor_arr = np.zeros((len(arr), k+1))
+	
+	for n in range(len(arr)):
+		
+		query_point = arr[n]
+		
+		dist_arr = list(np.sum((arr-query_point)**2, axis=1))
+		
+		heap_list = [(x, i) for (x, i) in zip(dist_arr, range(len(dist_arr)))]
+		hp.heapify(heap_list)
+		
+		for m in range(k+1):
+			
+			neighbor_arr[n, m] = hp.heappop(heap_list)[1]
+		
+	return neighbor_arr
+		
 
 def create_kNN_graph(arr, k):
 	
-	tree = ktree(arr)
-	dist, edges = tree.query(arr, k+1)
+	edges = get_KNN(arr, k)
 			
 	edge_list = []
 	for e in edges:
