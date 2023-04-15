@@ -12,6 +12,22 @@ import numpy as np
 def create_random_data(num_data,
 					   n_clusters:int=5,
 					   n_features:int=5):
+	
+    """
+	Generate random data
+	Parameters:
+		num_data: int
+		Number of data points required
+		n_clusters: int
+		Number of clusters required
+		n_features: int
+		Number of features required
+	Returns:
+		data_arr: (# of samples, # of features) numpy array
+	    data_label: (# of samples) numpy array
+		  Array with true labels
+	
+    """
 
     means = np.random.normal(size=(5,5))
     data_arr = np.zeros((num_data, n_features))
