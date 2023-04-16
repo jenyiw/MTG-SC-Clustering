@@ -224,18 +224,3 @@ def RandomParams(gmm_data, k, n_features, epsilon=0.005, eye_covar=False):
     mix_props = mix_props / np.sum(mix_props)
 
     return means, np.stack([x + np.eye(n_features, n_features) * epsilon for x in covars]), mix_props
-
-if __name__ == "__main__":
-    dir = os.path.dirname(__file__)
-    data_path = os.path.join(dir, "data", "mouse-data", "hip1000.txt")
-    test_path = os.path.join(dir, "data", "test_mean.txt")
-
-    data = np.loadtxt(data_path, dtype=np.float32, delimiter=",").T
-    test_means = np.loadtxt(test_path).T
-    data = data[:, :10]
-    test_means = test_means[:, :10]
-    print("Data shape:", data.shape)
-    print("test_means shape: ", test_means.shape)
-
-    Question6A(data, test_means)
-    # Question6C(data)
