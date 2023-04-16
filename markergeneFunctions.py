@@ -12,6 +12,24 @@ import numpy as np
 def get_gene_stats_by_cluster(data_arr, 
 					 cluster_labels, 
 					 clusters):
+	
+	"""
+	GEt statistics for each cluster and each gene.
+	Parameters:
+		data_arr: (# of samples, # of genes) numpy array
+			 Array of data points
+		 cluster_labels: numpy array
+			 Cluster labels for each point
+		 clusters: list
+			 List of clusters
+	 Returns:
+		median_arr: (# of cluster, # of genes) numpy array
+			   Array of median values for each cluster and each gene
+	   mean_arr: (# of cluster, # of genes) numpy array
+			   Array of mean values for each cluster and each gene		 
+	
+	
+	"""
 
 	median_arr = np.zeros((len(clusters), data_arr.shape[1]))
 	mean_arr = np.zeros_like(median_arr)
