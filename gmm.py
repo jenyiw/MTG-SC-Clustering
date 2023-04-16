@@ -202,6 +202,15 @@ def CustomPlot(y, x=None, title=None, xlabel=None, ylabel=None, save_path=None):
 
 
 def RandomParams(gmm_data, k, n_features, epsilon=0.005, eye_covar=False):
+    """
+    Generates random starting parameters for gmms. 
+    Input:
+        gmm_data: An (n,d) numpy array. (n - samples, d - features)
+        k: Number of clustesr.
+        n_features: The number of features each variable has.
+    Output:
+        Randomized centers of clusters, covariance matrix for each cluster and mixture proportions.
+    """
     means = gmm_data[rng.choice(range(gmm_data.shape[0]), k, replace=False), :]
     if not eye_covar:
         covars = []
@@ -215,51 +224,6 @@ def RandomParams(gmm_data, k, n_features, epsilon=0.005, eye_covar=False):
     mix_props = mix_props / np.sum(mix_props)
 
     return means, np.stack([x + np.eye(n_features, n_features) * epsilon for x in covars]), mix_props
-
-
-def Question6A(data, test_means):
-    k = 3
-    d = data.shape[1]
-    init_cov = np.zeros((k, d, d))
-    for i in range(k):
-        init_cov[i, :, :] = np.diag(np.ones(data.shape[1]))
-    init_mix_props = np.asarray([0.3, 0.3, 0.4])
-
-    _, loss, hm = GMM(data, test_means, init_cov, init_mix_props, reg_covar=0)
-    # np.savetxt("6a.txt", hm[0, :])
-
-    print(loss[-1])
-    # CustomPlot(
-    #     loss,
-    #     xlabel="Iteration Number",
-    #     ylabel="Log Likelihood",
-    #     title="Log Likelihood vs Iteration Number for 3 clusters",
-    #     save_path="6a.png",
-    # )
-
-
-def Question6C(data):
-    min_k = 2
-    max_k = 15
-    best_losses = -np.inf * np.ones(max_k-min_k+1)
-    d = data.shape[1]
-    for k in range(min_k, max_k+1):
-        for i in range(1):
-            print(f"\rNumber of Clusters: {k}\tIteration: {i}.", end = "")
-            init_means, init_covs, init_mix_props = RandomParams(data, k, d)
-            _, loss, _ = GMM(data, init_means, init_covs, init_mix_props)
-            if loss[-1] > best_losses[k - 3]:
-                best_losses[k - 3] = loss[-1]
-    print("\nDone!")
-    CustomPlot(
-        best_losses,
-        x=np.asarray(range(min_k, max_k+1)),
-        xlabel="Number of Clusters",
-        ylabel="Log Likelihood",
-        title="Log Likelihood vs Number of clusters",
-        save_path="TEST.png",
-    )
-
 
 if __name__ == "__main__":
     dir = os.path.dirname(__file__)
