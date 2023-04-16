@@ -1,6 +1,5 @@
 import numpy as np
 from matplotlib import pyplot as plt
-import os
 
 rng = np.random.default_rng(133221333123111)
 
