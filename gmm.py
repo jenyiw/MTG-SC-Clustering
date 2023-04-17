@@ -171,7 +171,6 @@ def GMM(X, init_means, init_covs, init_mix_props, thresh=0.001, reg_covar: float
         mix_props = UpdateMixProps(hidden_matrix)
         covs = UpdateCovars(X, hidden_matrix, means)
         means = UpdateMeans(X, hidden_matrix)
-        print(i, loss[i])
         i += 1
     return np.argmax(hidden_matrix, axis=1), loss[:i], hidden_matrix
 
