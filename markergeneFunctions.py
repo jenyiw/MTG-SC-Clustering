@@ -55,27 +55,44 @@ def filter_genes_by_median(median_arr, mean_arr):
 			   Array of mean values for each cluster and each gene
 			   
    Returns:
-	   Cluster_dict: dict
-		   Dictionary of marker genes for each cluster
+	   None
 
 	"""
 
-	cluster_dict = {}	
+	cluster_dict = {}
+	marker_rank_dict = {}		
 	for n in range(len(mean_arr)):
 		cluster_dict[n] = []
+		marker_rank_dict[n] = []		
 	for n in range(mean_arr.shape[1]):
 		top_cluster = np.argmax(median_arr[:, n])
 		if mean_arr[top_cluster, n] >= 1:
 		    median_exp = median_arr[top_cluster, n]
-		    for j in median_arr[:, n]:
-		        if j*2 > median_exp:
-		            continue
+		    temp_median_arr = median_arr[:, n]
+		    temp_median_arr = np.delete(temp_median_arr, top_cluster, axis=0)
+		    if np.all(temp_median_arr*2 < median_exp):
 		        cluster_dict[top_cluster].append(n)
+		        marker_rank_dict[top_cluster].append(median_exp/np.mean(temp_median_arr))
 
-	#save genes
+	#sort markers by fold change over mean
+	for n in cluster_dict.keys():
+		a = cluster_dict[n]
+		b = marker_rank_dict[n]
+		sorted_genes = [x for _, x in sorted(zip(b, a))]
+		sorted_fold_change = sorted(b)
+		cluster_dict[n] = sorted_genes
+		marker_rank_dict[n] = sorted_fold_change
+				
+	#save sorted arrays
 	with open('marker_genes.json', 'w') as f:
 	    json.dump(cluster_dict, f)
+	with open('marker_genes_fc.json', 'w') as f:
+	    json.dump(marker_rank_dict, f)		
 		
-	return cluster_dict
+	return
+
+def plot_marker_genes(n_genes:int=10):
+	
+	
 		
 	
