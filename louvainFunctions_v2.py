@@ -1,3 +1,4 @@
+louvain2
 # -*- coding: utf-8 -*-
 """
 Created on Thu Mar 23 21:24:17 2023
@@ -454,12 +455,4 @@ if __name__ == '__main__':
 	membership_arr = louvain_clustering(data_arr, k=5)
 	puF.plot_umap(data_arr, membership_arr)
 	print(membership_arr)
-
-
-
-
-
-		
-	
-	
 	
