@@ -8,6 +8,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import heapq as hp
 
+import plotumapFunctions as puF
+
 def get_KNN(arr, k):
 	
 	neighbor_arr = np.zeros((len(arr), k+1))
@@ -22,8 +24,7 @@ def get_KNN(arr, k):
 		hp.heapify(heap_list)
 		
 		for m in range(k+1):
-			
-			neighbor_arr[n, m] = hp.heappop(heap_list)[1]
+ 			neighbor_arr[n, m] = hp.heappop(heap_list)[1]
 		
 	return neighbor_arr
 		
@@ -33,9 +34,9 @@ def create_kNN_graph(arr, k):
 	edges = get_KNN(arr, k)
 			
 	edge_list = []
-	for e in edges:
-		for f in range(1,3):
-			edge_list.append((int(e[0]),int(f)))
+	for e in range(len(edges)):
+		for f in range(1,k+1):
+			edge_list.append((int(edges[e, 0]),int(edges[e, f])))
 			
 	for u, v in edge_list:
 		if (v, u) in edge_list:
@@ -70,7 +71,7 @@ def calculate_kiin(i, c, edge_list, edge_weights, cluster_arr):
 	
 	members = set(np.where(cluster_arr == c)[0])
 	members.add(i)
-	
+
 	for j, (u, v) in enumerate(edge_list):
 		
 		if (u in members) or (v in members):
@@ -79,26 +80,30 @@ def calculate_kiin(i, c, edge_list, edge_weights, cluster_arr):
 		if (u != i) and (v != i):
 			continue
 	
-		if (u == i) and (cluster_arr[v] == c):
-			same_cluster += edge_weights[j]	
-			
-		elif (v == i) and (cluster_arr[u] == c):
-			same_cluster += edge_weights[j]	
-		
+		if (u == i) and (v in members):
+			same_cluster += edge_weights[j]
 
+			
+		elif (v == i) and (u in members):
+			same_cluster += edge_weights[j]		
+		
+			
 	return same_cluster, sum_tot_j
 
-def update_membership(membership_arr, cluster_arr, cluster_list):
+def update_membership(membership_arr, cluster_arr, cluster_old):
 	
-	for i in range(len(cluster_list)):
+	new_membership_arr = np.zeros((len(membership_arr)))
+	
+	for i in range(len(cluster_old)):
 		
 		#new cluster
 		new_cluster = cluster_arr[i]
 		
 		#map all members in the node to new node index
-		membership_arr[membership_arr == cluster_list[i]] = new_cluster
+		new_membership_arr[membership_arr == cluster_old[i]] = new_cluster
+
 		
-	return membership_arr
+	return new_membership_arr
 
 def reformat_cluster_arr(cluster_arr):
 	
@@ -119,9 +124,6 @@ def community_aggregation(edge_list, edge_weights, cluster_arr):
 		new_node_u = int(cluster_arr[u])
 		new_node_v = int(cluster_arr[v])
 		
-# 		new_node_u = clusters.index(u_cluster)
-# 		new_node_v = clusters.index(v_cluster)
-		
 		if new_node_u == new_node_v:
 			
 			#add edge_weights to self_loop
@@ -136,17 +138,17 @@ def community_aggregation(edge_list, edge_weights, cluster_arr):
 		#add edge_weights to edges between clusters				
 		elif new_node_u != new_node_v:
 			
-			if ((new_node_u, new_node_v) not in new_edge_list) and ((new_node_v, new_node_u) not in new_edge_list):
+			if (new_node_u, new_node_v) in new_edge_list:
+				index = new_edge_list.index((new_node_u, new_node_v))
+				new_edge_weights[index] += 	edge_weights[i]
 				
-				new_edge_list.append((new_node_u, new_node_v))
-				new_edge_weights.append(edge_weights[i])			
+			elif (new_node_v, new_node_u) in new_edge_list:
+				index = new_edge_list.index((new_node_v, new_node_u))	
+				new_edge_weights[index] += 	edge_weights[i]
 				
 			else:
-				if (new_node_u, new_node_v) in new_edge_list:
-					index = new_edge_list.index((new_node_u, new_node_v))
-				else:
-					index = new_edge_list.index((new_node_v, new_node_u))					
-				new_edge_weights[index] += 	edge_weights[i]			
+				new_edge_list.append((new_node_u, new_node_v))
+				new_edge_weights.append(edge_weights[i])						
 	
 	new_cluster_arr = np.array(list(set(cluster_arr)))
 	
@@ -171,6 +173,8 @@ def plot_graph(clusters_list, data_arr, membership_arr, edge_list, t):
 		plt.plot([data_arr[pt, 0], data_arr[pt2, 0]], [data_arr[pt, 1], data_arr[pt2, 1]], 'b-', markersize=0, alpha=0.7)
 			
 	plt.scatter(data_arr[:, 0], data_arr[:, 1], c=color_list, zorder=len(edge_list))
+	for i, (x,y) in enumerate(data_arr):
+	    plt.annotate(membership_arr[i], xy =(x, y))
 	plt.title(f'Louvain clustering for iteration: {t}')
 	plt.show()
 	plt.close()
@@ -195,18 +199,18 @@ def louvain_clustering(data_arr,
 	#initialize cluster array
 	cluster_arr = np.zeros((len(data_arr)), dtype=np.uint16)
 	cluster_arr[:] = range(len(data_arr))
-	cluster_list = cluster_arr.copy()
+	cluster_old = cluster_arr.copy()
 	
 	#initialize membership array
 	membership_arr = np.zeros_like(cluster_arr)
 	membership_arr[:] = range(len(cluster_arr))
 	
-	plot_graph(cluster_list, data_arr, membership_arr, edge_list, 0)
-	
+# 	plot_graph(cluster_old, data_arr, membership_arr, edge_list, 0)
+ 	
 	total_increase = 1
 	t = 0
 	
-	print('Starting louvain clustering')
+	print('Starting Louvain clustering')
 	
 	while total_increase > 0:
 	
@@ -218,7 +222,7 @@ def louvain_clustering(data_arr,
 		
 		#calculate ki for all points
 		ki_arr = calculate_ki_m(edge_list, edge_weights, cluster_arr)
-		
+
 		#random shuffle since order of iteration matters
 		shuffled_index = np.arange(len(cluster_arr))
 		np.random.shuffle(shuffled_index)
@@ -227,16 +231,16 @@ def louvain_clustering(data_arr,
 			
 			i = shuffled_index[r]
 			
-			#calculate ki_m
+			#calculate ki
 			ki = ki_arr[i]
-			ki_m = ki/(total_edges*2)
+			ki_m = ki/total_edges
 			
 			#store max values
 			max_community = cluster_arr[i]
 			max_increase = 0
 			
 			#try adding i to every cluster
-			for c in cluster_list:
+			for c in cluster_arr:
 				
 				if c == cluster_arr[i]:
 					continue
@@ -259,14 +263,15 @@ def louvain_clustering(data_arr,
 		if total_increase < theta:
 		 	break
 		else:
+
 		 	cluster_arr = reformat_cluster_arr(cluster_arr)	 
-		 	membership_arr = update_membership(membership_arr, cluster_arr, cluster_list)
+		 	membership_arr = update_membership(membership_arr, cluster_arr, cluster_old)			 
 		 	edge_list, edge_weights, cluster_arr = community_aggregation(edge_list, edge_weights, cluster_arr)	  
-		 	cluster_list = cluster_arr.copy()
+		 	cluster_old = cluster_arr.copy()
 		 
 		t += 1
-		print(f'Running iteration: {t}')
-		plot_graph(cluster_list, data_arr, membership_arr, edge_list_original, t)
+# 		print(f'Running iteration: {t}')
+# 		plot_graph(cluster_old, data_arr, membership_arr, edge_list_original, t)
 		
 	return membership_arr
  
@@ -296,8 +301,9 @@ def louvain_clustering(data_arr,
 
 if __name__ == '__main__':
 	
-	data_arr = create_trial_data(10)
-	membership_arr = louvain_clustering(data_arr, k=2)
+	data_arr = create_trial_data(15)
+	membership_arr = louvain_clustering(data_arr, k=5)
+	puF.plot_umap(data_arr, membership_arr)
 	print(membership_arr)
 
 
