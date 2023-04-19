@@ -1,3 +1,4 @@
+louvain2
 # -*- coding: utf-8 -*-
 """
 Created on Thu Mar 23 21:24:17 2023
@@ -11,6 +12,20 @@ from scipy.sparse import csc_matrix
 import plotumapFunctions as puF
 
 def get_KNN(arr, k):
+
+	"""
+	Get k-NN for each point.
+	Parameters:
+		arr: (# of samples, # of features) numpy array
+			 data array
+	 k: int
+			number of nearest neighbors for kNN graph
+
+	 Returns:
+		neighbor_arr: (# of samples, k+1) numpy array
+		  Index of data points (1st column) and k-nearest neighbors
+	 
+	"""
 	
 	neighbor_arr = np.zeros((len(arr), k+1))
 	
@@ -30,6 +45,19 @@ def get_KNN(arr, k):
 		
 
 def create_kNN_graph(arr, k):
+	"""
+	Construct kNN graph
+	Parameters:
+		arr: (# of samples, # of features) numpy array
+			 data array
+	 k: int
+			number of nearest neighbors for kNN graph
+
+	 Returns:
+		edge_mat: sparse matrix
+		  Adjacency matrix as a sparse matrix
+	 
+	"""
 	
 	edges = get_KNN(arr, k)
 			
@@ -42,11 +70,22 @@ def create_kNN_graph(arr, k):
 	
 	edge_weights = np.ones_like(edge_rows)
 	edge_mat = csc_matrix((edge_weights, (edge_rows, edge_cols)), shape=(len(arr), len(arr)), dtype=np.uint16)
-			
 
 	return edge_mat
 
 def calculate_total_weight(edge_mat):
+	
+	"""
+	Calcuate total weight of edges in the graph
+	Parameters:
+		edge_mat: sparse matrix
+		  Adjacency matrix as a sparse matrix
+
+	 Returns:
+		total_weight: int
+			Total weight of edges in the graph
+	 
+	"""
 		
 	total_weight = np.sum(np.triu(edge_mat.todense()))
 	
@@ -56,12 +95,40 @@ def calculate_total_weight(edge_mat):
 def calculate_delta_m(sum_tot_j,
 					  kiin,
 					  ki_m,):
-		
+	
+	"""
+	Calcuate delta Q
+	Parameters:
+		sum_tot_i: float
+		  Sum of links to nodes in community
+	  kiin: float
+		  Sum of links from node i to nodes in community
+	  ki_m: float
+		  Normalized sum of links to i
+
+	 Returns:
+		delta_mm: float
+		  delta Q
+	 
+	"""		
 	delta_mm = kiin - sum_tot_j*ki_m
 	
 	return delta_mm	
 
 def calculate_ki_m(edge_mat, cluster_arr):
+	
+	"""
+	Calcuate sum of links to each point i
+	Parameters:
+		edge_mat: sparse matrix
+		  Adjacency matrix as a sparse matrix
+		cluster_arr: (# of nodes,) array of nodes
+	  
+	 Returns:
+		ki_arr: (# of nodes,)
+			Sum of links to each node
+	 
+	"""
 	
 	ki_arr = np.zeros_like(cluster_arr)
 	
@@ -71,6 +138,25 @@ def calculate_ki_m(edge_mat, cluster_arr):
 	return ki_arr	
 
 def calculate_kiin(i, c, edge_mat, cluster_arr):
+	
+	"""
+	Calcuate sum of links to each point i
+	Parameters:
+		i: int
+		 Index of node of interest
+	   c: int
+	    Index of community of interest
+		edge_mat: sparse matrix
+		  Adjacency matrix as a sparse matrix
+		cluster_arr: (# of nodes,) array of nodes
+	  
+	 Returns:
+		same_cluster: int
+			Sum of links from i to nodes in c	
+		sum_tot_j: int
+			Sum of links to nodes in c
+	 
+	"""
 	
 	same_cluster = 0
 	
@@ -91,6 +177,21 @@ def calculate_kiin(i, c, edge_mat, cluster_arr):
 
 def update_membership(membership_arr, cluster_arr, cluster_old):
 	
+	"""
+	maps membership of each samples to each new class/node during each iteration
+	Parameters:
+		membership_arr: (# of samples,) numpy array
+		    membership of each node
+		cluster_old: (# of nodes,) numpy array
+			Array of previous membership of each node
+		cluster_arr: (# of nodes,)
+			Array of new membership of each node	  
+	 Returns:
+		new_membership_arr: (# of samples,) numpy array
+			Array with updated memberships	
+	 
+	"""	
+	
 	new_membership_arr = np.zeros((len(membership_arr)))
 	
 	for i in range(len(cluster_old)):
@@ -106,6 +207,17 @@ def update_membership(membership_arr, cluster_arr, cluster_old):
 
 def reformat_cluster_arr(cluster_arr):
 	
+	"""
+	Reset the clustering to start from 0
+	Parameters:
+		cluster_arr: (# of nodes,)
+			Array of new membership of each node	  
+	 Returns:
+		cluster_arr: (# of nodes,) numpy array
+			Array with updated cluster array
+	 
+	"""		
+	
 	clusters = list(np.unique(cluster_arr))
 	cluster_arr = [clusters.index(x) for x in cluster_arr]
 	cluster_arr = np.array(cluster_arr)
@@ -113,6 +225,21 @@ def reformat_cluster_arr(cluster_arr):
 	return cluster_arr
 
 def community_aggregation(edge_mat, cluster_arr):
+	
+	"""
+	Community aggregation after each iteration.
+	Parameters:
+		edge_mat: sparse matrix
+		  Adjacency matrix as a sparse matrix
+		cluster_arr: (# of nodes,)
+			Array of new membership of each node	  
+	 Returns:
+ 		new_edge_mat: sparse matrix
+		  New adjacency matrix as a sparse matrix
+		new_cluster_arr: (# of new nodes,) numpy array
+			Array with updated cluster array
+	 
+	"""	
 	
 	num_clusters = np.unique(cluster_arr)
 	new_edge_mat = csc_matrix((len(num_clusters), len(num_clusters)), dtype=np.uint16)	
@@ -144,6 +271,29 @@ def community_aggregation(edge_mat, cluster_arr):
 
 
 def plot_graph(clusters_list, data_arr, membership_arr, edge_mat, t):
+	
+	
+	"""
+	PLot graph for louvain.
+	
+	Parameters:
+		clusters_list: list
+			list of clusters
+		data_arr: (# of samples, # of features) numpy array
+			 Data array
+		edge_mat: sparse matrix
+		  Adjacency matrix as a sparse matrix
+		membership_arr: (# of samples,)
+			Array of membership of each node
+			t: int
+			Iteration number  
+	 Returns:
+ 		new_edge_mat: sparse matrix
+		  New adjacency matrix as a sparse matrix
+		new_cluster_arr: (# of new nodes,) numpy array
+			Array with updated cluster array
+	 
+	"""		
 	
 	#generate random color palette
 	colors = []
@@ -179,7 +329,19 @@ def create_trial_data(n):
 
 def louvain_clustering(data_arr,
 					   k:int=2):
-	
+		
+	"""
+	Run Louvain
+	Parameters:
+		data_arr: (# of samples, # of features) numpy array
+			 Data array
+		 k: int
+		   k for kNN graph
+	 Returns:
+ 		membership_arr: (# of samples,) numpy array
+			Array with membership of each node
+	 
+	"""	
 	#create KNN graph
 	edge_list = create_kNN_graph(data_arr, 2)
 	edge_list_original = edge_list.copy()
@@ -293,12 +455,4 @@ if __name__ == '__main__':
 	membership_arr = louvain_clustering(data_arr, k=5)
 	puF.plot_umap(data_arr, membership_arr)
 	print(membership_arr)
-
-
-
-
-
-		
-	
-	
 	
