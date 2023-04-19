@@ -6,6 +6,7 @@ from sklearn.preprocessing import LabelBinarizer
 from sklearn.metrics import RocCurveDisplay, auc
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
 sns.set()
 
 
@@ -124,7 +125,8 @@ def silhouette_coefficient(cluster_labels, data, cluster_centroids):
     for point in range(num_points):
         data_point = data[point, :]
         # determine which cluster the point belongs to
-        cluster_label = cluster_labels[point]
+        cluster_label = int(cluster_labels[point])
+
         # find the Euclidean distance between the data point and its cluster centre
         a_value = np.linalg.norm(
             data_point - cluster_centroids[cluster_label, :])
@@ -166,7 +168,7 @@ def find_closest_centroid(point, cluster_label, cluster_centroids):
     return closest_distance
 
 
-def plot_evaluation_metric(array, labels, mode, cluster_method):
+def plot_evaluation_metric(array, labels, mode, cluster_method, output_folder):
     '''
     Array: Given multiple clusterings, find Dunn Index (DI) or Silhoutte Coefficient (SC) of each clustering and store the value for each clustering in a numpy array.
     Labels: Also provide a list of labels specifying what each clustering algorithm is. This could be abbreviated names. The function will output a bar plot of DI/ SC across clustering algorithms.
@@ -177,7 +179,7 @@ def plot_evaluation_metric(array, labels, mode, cluster_method):
     plt.title("Comparison of {f} among clusterings".format(f=mode))
     plt.xlabel(cluster_method)
     plt.ylabel(mode)
-    plt.savefig("../output/{m}_{c}.png".format(m=mode, c=cluster_method))
+    plt.savefig(os.path.join(output_folder, "{m}_{c}.png").format(m=mode, c=cluster_method))
     plt.show()
     plt.clf()
     pass

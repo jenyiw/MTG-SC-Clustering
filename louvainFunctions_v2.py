@@ -1,4 +1,3 @@
-louvain2
 # -*- coding: utf-8 -*-
 """
 Created on Thu Mar 23 21:24:17 2023
