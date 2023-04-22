@@ -9,6 +9,7 @@ Functions for extracting marker genes from clusters by pairwise comparison
 """
 import h5py
 import json
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -101,6 +102,7 @@ def plot_marker_genes(data_path,
 					  clusters, 
 					  labels,
 					  n_genes:int=3,
+					  gene_list_path:str='./data/human_MTG_2018-06-14_genes-rows.csv'
 					  ):
 	
 	"""
@@ -119,6 +121,9 @@ def plot_marker_genes(data_path,
 	
 	
 	"""
+	
+	df = pd.read_csv(gene_list_path, delimiter=',')
+	gene_names = df['gene'].to_list()
 	
 	with open('marker_genes.json') as f:
 		marker_genes = json.load(f)
@@ -142,7 +147,7 @@ def plot_marker_genes(data_path,
 			        gene = gene_list[g]
 			        gene_data = gene_matrix[:, gene]
 			        ax[g].violinplot(dataset=gene_data, positions=[m], showextrema=False)
-			        ax[g].set_ylabel(gene, fontsize=16)					
+			        ax[g].set_ylabel(gene_names[gene], fontsize=16)					
 		
 		    fig.tight_layout()
 		    plt.savefig(f'marker_gene_{n}.jpg')
