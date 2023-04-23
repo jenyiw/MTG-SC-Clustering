@@ -101,8 +101,8 @@ def plot_marker_genes(data_path,
 					  clusters, 
 					  labels,
 					  n_genes:int=3,
-					  gene_list_path:str='./data/human_MTG_2018-06-14_genes-rows.csv',
 					  save_dir: str = None
+					  gene_list_path:str='./data/human_MTG_2018-06-14_genes-rows.csv'
 					  ):
 	
 	"""
@@ -154,3 +154,4 @@ def plot_marker_genes(data_path,
 			else:
 				save_path = os.path.join(save_dir, f'marker_gene_{n}.jpg')
 			fig.savefig(save_path)
+
